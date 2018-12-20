@@ -84,34 +84,48 @@ def LoadData():
         # 然后再读取一行继续
         sline = infile.readline().strip()
     infile.close()
-    print i, "instances loaded!"
-    print len(ClassFreq), "classes!", len(WordDic), "words!"
-    print(ClassFreq)
+    # print i, "instances loaded!"
+    # print len(ClassFreq), "classes!", len(WordDic), "words!"
+    # print(ClassFreq)
     # print ClassFeaDic
     # print WordDic
 
 
+# 计算模型
 def ComputeModel():
     sum = 0.0
+    # 循环遍历不同类文章记录的字典value值,key是classid value 是该类对应的频次
     for freq in ClassFreq.values():
+        # 获取三类文章总数
         sum += freq
+    # 循环遍历不同类文章记录的字典的key值,key是classid value是该类对应的频次
     for classid in ClassFreq.keys():
+        #
         # p(yi)：先验概率：每个类的文章个数/总文章数
         ClassProb[classid] = (float)(ClassFreq[classid]) / (float)(sum)
-        print(ClassProb)  # 对应每个类文章的先验概率 {1: 0.33102323685283325, 2: 0.33917651854871583, 3: 0.32980024459845086}
+        # print(ClassProb)  # 对应每个类文章的先验概率 {1: 0.33102323685283325, 2: 0.33917651854871583, 3: 0.32980024459845086}
     # p(xj|yi)
     # 遍历每个类，针对每一个类，重构ClassFeaProb为概率值
+    # 循环遍历没类文章每个词频的字典中的key,key是classid,value是字典{词:词频}
     for classid in ClassFeaDic.keys():
-        # Multinomial Distribution
         sum = 0.0
+        # 循环遍历当前classid对应的value字典{词典,词频}
         for wid in ClassFeaDic[classid].keys():
+            # 统计当前类的文章的词频次数
             sum += ClassFeaDic[classid][wid]
+            # print sum
+        # print ClassFeaDic  # {1: {1: 93, 2: 2817, 3: 1525}，}
         # newsum = (float)(sum+len(WordDic)*DefaultFreq)
-        newsum = (float)(sum + 1)
+        # 为了使程序健壮，防止向下溢出，这里可以把sum+1,防止分母为零
+        newsum = (float)(sum + 1)  # float() 函数用于将整数和字符串转换成浮点数。
+        print newsum
         # Binary Distribution
         # newsum = (float)(ClassFreq[classid]+2*DefaultFreq)
         for wid in ClassFeaDic[classid].keys():
+            # 存入条件概率值,
             ClassFeaProb[classid][wid] = (float)(ClassFeaDic[classid][wid] + DefaultFreq) / newsum
+            print ClassFeaProb[classid][wid]
+        # 每一类文章设置一个默认的条件概率,防止在测试集时候一个词在当前类文章没有,就有该值
         ClassDefaultProb[classid] = (float)(DefaultFreq) / newsum
     return
 
